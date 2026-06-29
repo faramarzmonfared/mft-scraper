@@ -49,21 +49,30 @@ class BaseScraper(ABC):
             requests.ConnectionError: If the connection fails.
             requests.Timeout: If the request times out.
         """
-        logger.info("Fetching URL: %s", url)
-        try:
-            response = self.session.get(url, timeout=10)
-            response.raise_for_status()
-            time.sleep(self.delay)
-            return BeautifulSoup(response.text, "html.parser")
-        except requests.HTTPError as e:
-            logger.error("HTTP error for %s: %s", url, e)
-            raise
-        except requests.ConnectionError as e:
-            logger.error("Connection error for %s: %s", url, e)
-            raise
-        except requests.Timeout as e:
-            logger.error("Timeout for %s: %s", url, e)
-            raise
+        max_retries = 3
+        for attempt in range(max_retries):
+            logger.info("Fetching URL: %s (attempt %d)", url, attempt + 1)
+            try:
+                response = self.session.get(url, timeout=10)
+                response.raise_for_status()
+                time.sleep(self.delay)
+                return BeautifulSoup(response.text, "html.parser")
+            except requests.HTTPError as e:
+                if e.response is not None and e.response.status_code == 429:
+                    wait = self.delay * (2 ** attempt)
+                    logger.warning("Rate limited. Waiting %.1fs before retry...", wait)
+                    time.sleep(wait)
+                    continue
+                logger.error("HTTP error for %s: %s", url, e)
+                raise
+            except requests.ConnectionError as e:
+                logger.error("Connection error for %s: %s", url, e)
+                raise
+            except requests.Timeout as e:
+                logger.error("Timeout for %s: %s", url, e)
+                raise
+
+        raise requests.HTTPError(f"Failed after {max_retries} retries: {url}")
 
     @abstractmethod
     def parse(self, soup: BeautifulSoup) -> list:
