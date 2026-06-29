@@ -1,0 +1,5 @@
+.env
+__pycash__/
+*.pyc
+.venv/
+dist/
