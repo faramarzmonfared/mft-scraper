@@ -1,7 +1,6 @@
 """Scraper for extracting detailed description from a course page."""
 
 import logging
-import re
 
 from bs4 import BeautifulSoup
 
@@ -19,28 +18,16 @@ class CourseDetailScraper(BaseScraper):
         delay: Seconds to wait between consecutive requests.
     """
 
-    def parse(self, soup: BeautifulSoup) -> list[CourseDetail]:
+    def parse(self, soup: BeautifulSoup, course_id: int = 0) -> list[CourseDetail]:
         """Parse course detail from a course page.
 
         Args:
             soup: Parsed HTML of the course detail page.
+            course_id: Course ID passed from the caller (extracted from URL).
 
         Returns:
             List containing a single CourseDetail object, or empty list on failure.
         """
-        # Extract course_id from canonical link or register button
-        course_id: int = 0
-        register_anchor = soup.find("a", href=re.compile(r"/studentPanel/register/(\d+)"))
-        if register_anchor:
-            match = re.search(r"/register/(\d+)", str(register_anchor["href"]))
-            if match:
-                course_id = int(match.group(1))
-
-        if not course_id:
-            logger.warning("Could not extract course_id from page")
-            return []
-
-        # Extract description block after <hr>
         hr_tag = soup.find("hr")
         if not hr_tag:
             logger.warning("No <hr> found on course page for id=%d", course_id)
@@ -52,8 +39,20 @@ class CourseDetailScraper(BaseScraper):
             return []
 
         description = desc_div.get_text(separator="\n", strip=True)
-
         logger.debug("Parsed course detail: id=%d desc_length=%d", course_id, len(description))
 
         return [CourseDetail(course_id=course_id, description=description)]
+
+    def scrape(self, url: str, course_id: int) -> list[CourseDetail]:
+        """Fetch a course page and parse its detail.
+
+        Args:
+            url: Full URL of the course detail page.
+            course_id: Course ID extracted from the URL by the caller.
+
+        Returns:
+            List containing a single CourseDetail object, or empty list on failure.
+        """
+        soup = self.fetch(url)
+        return self.parse(soup, course_id)
     
