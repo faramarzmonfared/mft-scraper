@@ -66,13 +66,15 @@ class BaseScraper(ABC):
                 logger.error("HTTP error for %s: %s", url, e)
                 raise
             except requests.ConnectionError as e:
-                logger.error("Connection error for %s: %s", url, e)
-                raise
+                wait = self.delay * (2 ** attempt)
+                logger.warning("Connection error for %s. Waiting %.1fs before retry...", url, wait)
+                time.sleep(wait)
+                continue
             except requests.Timeout as e:
                 logger.error("Timeout for %s: %s", url, e)
                 raise
 
-        raise requests.HTTPError(f"Failed after {max_retries} retries: {url}")
+        raise requests.RequestException(f"Failed after {max_retries} retries: {url}")
 
     @abstractmethod
     def parse(self, soup: BeautifulSoup) -> list:
