@@ -3,3 +3,5 @@ __pycash__/
 *.pyc
 .venv/
 dist/
+.vscode/
+main.py
