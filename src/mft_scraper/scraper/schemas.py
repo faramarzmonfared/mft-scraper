@@ -43,6 +43,7 @@ class Course(BaseModel):
     status: CourseStatus = Field(..., description="Current enrollment status")
     sub_courses: Optional[list[str]] = Field(None, description="List of sub-course names if present")
     start_date: Optional[str] = Field(None, description="Course start date in Shamsi format e.g. '۱۴۰۵/۰۴/۲۸'")
+    start_note: Optional[str] = Field(None, description="Textual start note e.g. 'starts when full'")
     url: str = Field(..., description="Full URL to course detail page")
 
 
