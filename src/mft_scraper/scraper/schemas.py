@@ -48,6 +48,5 @@ class CourseDetail(BaseModel):
     """Represents detailed information from an individual course page."""
 
     course_id: int = Field(..., description="Course ID matching Course.id")
-    prerequisites: Optional[str] = Field(None, description="Prerequisites text if present")
-    syllabus: str = Field(..., description="Full syllabus and description block as raw text")
+    description: str = Field(..., description="Full course description block as raw text")
     
