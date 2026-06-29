@@ -42,6 +42,7 @@ class Course(BaseModel):
     discount_description: Optional[str] = Field(None, description="Discount badge text if present")
     status: CourseStatus = Field(..., description="Current enrollment status")
     sub_courses: Optional[list[str]] = Field(None, description="List of sub-course names if present")
+    start_date: Optional[str] = Field(None, description="Course start date in Shamsi format e.g. '۱۴۰۵/۰۴/۲۸'")
 
 
 class CourseDetail(BaseModel):
